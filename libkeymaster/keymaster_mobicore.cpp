@@ -28,7 +28,7 @@
 #include <openssl/err.h>
 #include <openssl/x509.h>
 
-#include <nativehelper/UniquePtr.h>
+#include <memory>
 
 #define LOG_TAG "ExynosKeyMaster"
 #include <cutils/log.h>
@@ -43,30 +43,30 @@ struct BIGNUM_Delete {
         BN_free(p);
     }
 };
-typedef UniquePtr<BIGNUM, BIGNUM_Delete> Unique_BIGNUM;
+typedef std::unique_ptr<BIGNUM, BIGNUM_Delete> Unique_BIGNUM;
 
 struct EVP_PKEY_Delete {
     void operator()(EVP_PKEY* p) const {
         EVP_PKEY_free(p);
     }
 };
-typedef UniquePtr<EVP_PKEY, EVP_PKEY_Delete> Unique_EVP_PKEY;
+typedef std::unique_ptr<EVP_PKEY, EVP_PKEY_Delete> Unique_EVP_PKEY;
 
 struct PKCS8_PRIV_KEY_INFO_Delete {
     void operator()(PKCS8_PRIV_KEY_INFO* p) const {
         PKCS8_PRIV_KEY_INFO_free(p);
     }
 };
-typedef UniquePtr<PKCS8_PRIV_KEY_INFO, PKCS8_PRIV_KEY_INFO_Delete> Unique_PKCS8_PRIV_KEY_INFO;
+typedef std::unique_ptr<PKCS8_PRIV_KEY_INFO, PKCS8_PRIV_KEY_INFO_Delete> Unique_PKCS8_PRIV_KEY_INFO;
 
 struct RSA_Delete {
     void operator()(RSA* p) const {
         RSA_free(p);
     }
 };
-typedef UniquePtr<RSA, RSA_Delete> Unique_RSA;
+typedef std::unique_ptr<RSA, RSA_Delete> Unique_RSA;
 
-typedef UniquePtr<keymaster0_device_t> Unique_keymaster_device_t;
+typedef std::unique_ptr<keymaster0_device_t> Unique_keymaster_device_t;
 
 /**
  * Many OpenSSL APIs take ownership of an argument on success but don't free the argument
@@ -114,7 +114,7 @@ static int exynos_km_generate_keypair(const keymaster0_device_t* dev,
         return -1;
     }
 
-    UniquePtr<uint8_t> keyDataPtr(reinterpret_cast<uint8_t*>(malloc(RSA_KEY_BUFFER_SIZE)));
+    std::unique_ptr<uint8_t> keyDataPtr(reinterpret_cast<uint8_t*>(malloc(RSA_KEY_BUFFER_SIZE)));
     if (keyDataPtr.get() == NULL) {
         ALOGE("memory allocation is failed");
         return -1;
@@ -214,7 +214,7 @@ static int exynos_km_import_keypair(const keymaster0_device_t* dev,
 
     memcpy(kbuf, &metadata, sizeof(metadata));
 
-    UniquePtr<uint8_t> outPtr(reinterpret_cast<uint8_t*>(malloc(RSA_KEY_BUFFER_SIZE)));
+    std::unique_ptr<uint8_t> outPtr(reinterpret_cast<uint8_t*>(malloc(RSA_KEY_BUFFER_SIZE)));
     if (outPtr.get() == NULL) {
         ALOGE("memory allocation is failed");
         return -1;
@@ -245,13 +245,13 @@ static int exynos_km_get_keypair_public(const keymaster0_device_t* dev,
         return -1;
     }
 
-    UniquePtr<uint8_t> binModPtr(reinterpret_cast<uint8_t*>(malloc(RSA_KEY_MAX_SIZE)));
+    std::unique_ptr<uint8_t> binModPtr(reinterpret_cast<uint8_t*>(malloc(RSA_KEY_MAX_SIZE)));
     if (binModPtr.get() == NULL) {
         ALOGE("memory allocation is failed");
         return -1;
     }
 
-    UniquePtr<uint8_t> binExpPtr(reinterpret_cast<uint8_t*>(malloc(sizeof(uint32_t))));
+    std::unique_ptr<uint8_t> binExpPtr(reinterpret_cast<uint8_t*>(malloc(sizeof(uint32_t))));
     if (binExpPtr.get() == NULL) {
         ALOGE("memory allocation is failed");
         return -1;
@@ -314,7 +314,7 @@ static int exynos_km_get_keypair_public(const keymaster0_device_t* dev,
         return -1;
     }
 
-    UniquePtr<uint8_t> key(static_cast<uint8_t*>(malloc(len)));
+    std::unique_ptr<uint8_t> key(static_cast<uint8_t*>(malloc(len)));
     if (key.get() == NULL) {
         ALOGE("Could not allocate memory for public key data");
         return -1;
@@ -356,7 +356,7 @@ static int exynos_km_sign_data(const keymaster0_device_t* dev,
         return -1;
     }
 
-    UniquePtr<uint8_t> signedDataPtr(reinterpret_cast<uint8_t*>(malloc(RSA_KEY_MAX_SIZE)));
+    std::unique_ptr<uint8_t> signedDataPtr(reinterpret_cast<uint8_t*>(malloc(RSA_KEY_MAX_SIZE)));
     if (signedDataPtr.get() == NULL) {
         ALOGE("memory allocation is failed");
         return -1;
